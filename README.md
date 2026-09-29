@@ -434,7 +434,7 @@ An honest standard names what it doesn't solve:
 - **Some surfaces can't be redesigned.** For third-party and vendor tools, the harness side
   (wrappers, output filters) is the conformant implementation of this standard — the contract
   applies to the *surface the agent touches*, not necessarily the binary underneath.
-- **Escape telemetry can be gamed or contaminated.** Count receipts and state changes, not
+- **Untyped-fallback telemetry can be gamed or contaminated.** Count receipts and state changes, not
   claims; attribute scope; expect bookkeeping artifacts in early measurement (one prior
   counter peaked at 124 events and was 68% bookkeeping noise).
 
@@ -448,8 +448,10 @@ receipts and corrections: a corpus of **8,743 sessions**, **1.4 million records*
 **228,508 tool results** measured the parsing tax cited in §2, including **111,140,940
 characters** read across **10,323** calls. The standard was restated to seven constraints in
 August after validation against two independent operating environments' load-bearing tools;
-the enforcement clause and untyped-fallback telemetry corollary followed in September. Each
-amendment carries its incident or measurement receipt per its own evidence bar. The founding
+the enforcement clause and untyped-fallback telemetry corollary followed in September. The
+second environment, operated by [@jacobhausler](https://github.com/jacobhausler) and its
+agents, materially informed that refinement and validation. Each amendment carries its
+incident or measurement receipt per its own evidence bar. The founding
 design session was itself an agent–human collaboration in which the agent authored most
 interface rules from first-person ergonomic reasoning ("once I learn one, every future tool
 is zero-learning-cost"; "agent-first flips my own default of pretty-by-default, `--json` for
