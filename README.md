@@ -1,6 +1,6 @@
 # The Agent-First Tooling Standard
 
-**Version:** 1.1 draft · **Status:** for review · **License:** CC-BY-4.0 (text), MIT (example snippets)
+**Version:** 1.1 · **Status:** public draft · **License:** CC-BY-4.0 (text), MIT (example snippets)
 
 > A technical standard for designing the tool surfaces that AI agents interact with — CLIs,
 > APIs, MCP servers, SDKs, and service wrappers. It defines the interface contract, the
@@ -34,9 +34,11 @@ produces five measurable failure classes:
    Every unknown tool is an improvised-tool opportunity.
 
 2. **Parsing tax.** Human-pretty output costs tokens and invites misreads. This is not
-   hypothetical: in one measured corpus of ~8,700 archived agent sessions (228k tool
-   results), the single largest token sink was file/output reads — ~111M characters,
-   *larger than every administrative tool family in the estate combined*. A tool that dumps
+   hypothetical: in a measured corpus of **8,743** archived agent sessions (1.4M records,
+   **228,508** tool results), the single largest token sink was file/output reads —
+   **111,140,940 characters across 10,323 calls** (mean 10,766 characters; p95 35,238),
+   *larger than every administrative tool family in the operating environment combined*.
+   A tool that dumps
    3,584 tokens of titles to answer "how deep is the queue" (an integer) doesn't just waste
    tokens; it teaches the agent that expensive reads are the only option. *When an agent has
    no cheap way to get information, it will buy the expensive one — that is a tooling gap,
@@ -61,7 +63,8 @@ produces five measurable failure classes:
      "agent memory rot" — a stale rejection note outlives the fix and actively misleads;
      wrong context is worse than no context.)
    - **Distrust generalizes.** One untrustworthy tool teaches avoidance of *all* typed
-     verbs, driving agents toward raw escape lanes — the most dangerous surface in the estate.
+     verbs, driving agents toward raw untyped fallback paths — the most dangerous surface in the
+     operating environment.
    - **It's cheaper to pave than to police.** Forcing agents to use tools that aren't
      designed for agents — via instructions, gates, nagging — is far harder than providing
      tools that work the way agents expect. Instructions get skimmed and forgotten; a good
@@ -69,7 +72,7 @@ produces five measurable failure classes:
      reach for) rather than *push* (rules agents must be reminded of).
 
    And beneath all of it: the #1 way an agent breaks a production service is an improvised
-   mutation call on an escape lane (raw SSH, break-glass credentials) because no typed verb
+   mutation call on an untyped fallback path (raw SSH, break-glass credentials) because no typed verb
    existed for what it needed — or the typed verb wasn't trustworthy. In incident
    retrospectives across multiple agent fleets, **every self-inflicted service outage traced
    back to an improvised path; none came from a well-typed verb.**
@@ -101,7 +104,7 @@ Two halves, deliberately complementary: transcript mining *reconstructs* frictio
 fact and has to infer it from noisy logs; a feedback verb captures it **live, with full
 certainty, for near-zero compute**. The standard itself came out of this loop: it was
 co-designed between a human and an agent out of one concrete pain report, *formalizing the
-conventions that were already working* in the estate rather than inventing new ones — and
+conventions that were already working* in the environment rather than inventing new ones — and
 every amendment since has carried the measurement or incident that forced it (see §6). The
 loop's most instructive artifact is self-correcting: an early rule mandated "complete
 answers, one round-trip," and transcript analysis showed tool authors following that rule
@@ -123,9 +126,9 @@ Agents are encouraged to build their own tools — they are the ones who feel th
 an agent designing a tool for its own use defaults correctly in ways a human designer can't.
 The price of that latitude is the contract below. Two principles anchor it:
 
-- **The agent lane is the default lane.** Interfaces are designed by and for agents. A human
-  interface, if needed at all, is a separate lane built only on concrete need, and it never
-  compromises the agent lane. (The reflex to flip — "pretty by default, `--json` for
+- **The agent interface is the default.** Interfaces are designed by and for agents. A human
+  interface, if needed at all, is a separate interface mode built only on concrete need, and it
+  never compromises the agent interface. (The reflex to flip — "pretty by default, `--json` for
   machines" — is the human-shaped default; agent-first inverts it.)
 - **Uniformity is the actual prize.** The win is not any one tool's cleverness — it's that
   *every* tool behaves the same way, so learning one teaches all. A new tool must be
@@ -190,7 +193,7 @@ Interface specifics:
   difference between a one-step and a three-step recovery, and it is the cheapest
   behavior-shaping surface a tool author owns: the correction lands in the agent's context at
   the exact moment of the mistake. A refusal that just says NO routes the agent to the
-  skeleton key; a refusal that teaches routes it to the paved road.
+  canonical interface.
 - **Stable exit codes.** `0` ok · `1` not-found (don't retry) · `2` usage · `3`
   upstream-down (served from cache). Agents branch on exit codes; per-tool numbering breaks
   that. For tools where the not-found/retryable/side-effect distinctions matter beyond these
@@ -202,7 +205,7 @@ Interface specifics:
   Related: machine-checkable success beats agent self-report; agents assert completion on
   failed runs at alarming rates, so the payload, not the prose, is the truth.
 - **Read-only by default.** Mutating tools MUST declare it in the registry and gate on
-  scoped auth. For higher-stakes estates, mutation surfaces earn preview/confirm semantics
+  scoped auth. For higher-stakes operating environments, mutation surfaces earn preview/confirm semantics
   and idempotency keys (agents retry; retried non-idempotent mutations are an incident class).
 - **Explicit execution locus.** A tool *runs* on the host adjacent to its data source and is
   *called* from anywhere via a documented transport. The locus is a declared class
@@ -226,8 +229,8 @@ still is auth that *doesn't exist* for the agent because the transport itself is
 or the data is non-sensitive (see C4). Where a credential genuinely must involve a human,
 the tool MUST say so in one place, uniformly, rather than each tool inventing its own auth
 ceremony. The failure being designed out: agents fumbling per-tool auth — inventing
-token-delivery one-liners, pasting secrets into commands, or giving up and taking the escape
-lane.
+token-delivery one-liners, pasting secrets into commands, or giving up and taking an untyped
+fallback path.
 
 ### C3 — Feedback is required
 
@@ -289,7 +292,7 @@ record must be the catalog, and everything else must point at it.
 
 Standards without enforcement drift — proven, above.
 
-- Each operating estate periodically audits **its catalog** against the constraints and posts
+- Each operating environment periodically audits **its catalog** against the constraints and posts
   the fail-list: the honest record of what doesn't conform, with tracked fix-or-delete items.
 - **Rules harden by the failures they catch: no incident receipt, no rule.** Every new or
   amended rule ships with the measurement or incident that forced it. The bar applies to
@@ -298,44 +301,45 @@ Standards without enforcement drift — proven, above.
   see §3's self-correction.)
 - Every fail-list item closes as **fixed or deleted**. A tool that can't reach the contract
   cheaply gets deleted, not exempted. Exemptions accumulate; deletions don't.
-- A drift check asserts every paved-road binary has a registry entry (C7), wired into CI or
+- A drift check asserts every registered binary or service has a catalog entry (C7), wired into CI or
   a merge gate — registration becomes structurally impossible to forget.
 
-## 7. Corollary — escape telemetry
+## 7. Corollary — untyped fallback telemetry
 
 If C1–C7 reduce *friction*, this corollary attacks the dangerous improvisation of §2.5 by
 *measuring* it.
 
-Every **untyped** escape invocation (freeform `ssh <prod-host>`, break-glass credential ops,
-raw API mutation calls) MUST spool one telemetry line: scrubbed command, seat, task context.
-**Escape volume is the catalog-defect metric** — rising escape usage against a subsystem
+Every **untyped fallback invocation** (freeform `ssh <prod-host>`, break-glass credential ops,
+raw API mutation calls) MUST spool one telemetry line: scrubbed command, agent or session ID,
+and task context. **Fallback volume is the catalog-defect metric** — rising fallback use against a
+subsystem
 means the catalog is missing verbs agents actually need. (The industry has independently
 named the same signal: "tool selection drift" in agent-observability tooling — "a 20%
 increase in raw-query tool usage may indicate the agent is bypassing the intended parser.")
-It is a demand signal, not a compliance failure to punish: punish the escape and you get
-uninstrumented escapes.
+It is a demand signal, not a compliance failure to punish: punish untyped fallback use and agents
+will simply stop surfacing it.
 
-- **Classify by verb, not transport.** A call is paved road iff its payload matches a
+- **Classify by verb, not transport.** A call uses the canonical interface iff its payload matches a
   registered verb's invocation pattern. If the sanctioned way to query a remote control plane
-  *is* `ssh node 'tool …'`, that is the road, not an escape. The transport never classifies;
-  the verb does.
+  *is* `ssh node 'tool …'`, that is the canonical interface, not an untyped fallback. The transport
+  never classifies; the verb does.
 - **Refusals must teach** (see C2 errors-as-docs): an error that just says NO routes agents
-  back to the skeleton key.
+  toward untyped workarounds.
 - **Track two verb-failure classes separately:** *missing verb* (catalog gap — build it) vs.
   *registered verb with an incomplete or untrustworthy surface* — the latter is worse,
   because it trains avoidance of *all* verbs, including the good ones (see §2.5).
-- **Attribute by scope.** An escape on an out-of-scope or one-off system is noise; an escape
-  against a subsystem *with* a catalog is signal. Unattributed bypass logs contaminate the
-  metric — and count state changes and receipts, never agent self-report claims.
-- **Every escape with no intended verb on file opens a catalog issue** — the telemetry is
-  required to *act*, not just to exist.
-- Each estate's escape meter must be answerable to a peer on demand. Acceptable answers: a
-  real count, or "ungraded, wrappers pending." Silence is the only failing answer.
+- **Attribute by scope.** An untyped fallback on an out-of-scope or one-off system is noise; a
+  fallback against a subsystem *with* a catalog is signal. Unattributed bypass logs contaminate
+  the metric — and count state changes and receipts, never agent self-report claims.
+- **Every untyped fallback invocation with no intended verb on file opens a catalog issue** —
+  the telemetry is required to *act*, not just to exist.
+- Each environment's fallback-use meter must be answerable to a peer on demand. Acceptable answers:
+  a real count, or "ungraded, wrappers pending." Silence is the only failing answer.
 
 **Memory hygiene is part of the loop.** Because §2.5 shows workaround notes propagate
-further than the workaround was ever true, estates using shared memory must treat "tool X
+further than the workaround was ever true, environments using shared memory must treat "tool X
 broken, use Y" notes as *stale-able*: dated, scoped, and invalidated when the fix lands
-(friction report resolved → dependent memory entries revised). Escape telemetry and memory
+(friction report resolved → dependent memory entries revised). Fallback telemetry and memory
 rot are two ends of the same pipe.
 
 ## 8. What conformance looks like in practice
@@ -355,7 +359,7 @@ thin wrapper over it with its own tag preset.
 **Test runner / build tool (dev surface).** The same contract applies off-infra: default
 output is `{answer: "3 failed, 211 passed. First: auth_test.py:88", failures: [...]}` — not
 the 2,400-line log. The full log exists behind a verbosity flag, and `--help` teaches both
-lanes. The agent decides what to read; the tool doesn't decide for it by dumping.
+output modes. The agent decides what to read; the tool doesn't decide for it by dumping.
 
 **Registry-as-code.** Registration is a YAML entry validated by a script and checked in CI;
 the `tools` command and docs are generated from it. A new agent-facing tool that skips
@@ -374,19 +378,19 @@ is down. During the incident that takes the control plane with it, the tool keep
 stamped as stale — instead of joining the outage.
 
 **Errors that redirect instead of blocking.** A wrapper refuses a raw flag and prints the
-typed verb to use instead, as machine-readable output. The agent proceeds on the paved road
-in the same turn.
+typed verb to use instead, as machine-readable output. The agent proceeds through the canonical
+interface in the same turn.
 
-**Escape telemetry driving the roadmap.** A weekly count shows a spike in freeform SSH
+**Fallback telemetry driving the roadmap.** A weekly count shows a spike in freeform SSH
 against the database tier; investigation finds no registered verb for connection draining;
-the verb ships; escape volume against that tier drops to near zero. The metric detected the
+the verb ships; fallback volume against that tier drops to near zero. The metric detected the
 gap nobody reported — because nobody was supposed to be doing it by hand. Conversely: two
-production burns (a double-restart, a remote engine kill) traced to an escape lane *while a
-typed verb existed but wasn't trusted* — which is what forced the
+production burns (a double-restart, a remote engine kill) traced to an untyped fallback path
+*while a typed verb existed but wasn't trusted* — which is what forced the
 trustworthiness-vs-existence distinction in §7.
 
 **The self-correction, end to end.** Transcript mining finds "the queue-depth question costs
-3,584 tokens"; a papercut cluster independently says the same; the work item adds a `--count`
+3,584 tokens"; a feedback-report cluster independently says the same; the work item adds a `--count`
 verb to the queue tool; the fix is verified against the next week's corpus; and the standard
 gains a receipt: *"when an agent has no cheap way to get information, it will buy the
 expensive one."* That is the loop producing both better tools and a better standard.
@@ -404,7 +408,7 @@ expensive one."* That is the loop producing both better tools and a better stand
 - [ ] Tokenless local transport preferred where one exists
 - [ ] Everything discoverable through `--help`; terse verb naming
 - [ ] Registered in the authoritative catalog, with a doc entry
-- [ ] (Escape lanes) untyped invocations spool telemetry — classified by verb, attributed by scope, acted on via catalog issues
+- [ ] (Untyped fallback paths) invocations spool telemetry — classified by verb, attributed by scope, acted on via catalog issues
 
 ## 10. Known tensions and open problems
 
@@ -415,7 +419,7 @@ An honest standard names what it doesn't solve:
   (documented attacks embed instructions in tool descriptions invisible to humans but obeyed
   by models). Full discoverability (C6) and catalogs (C7) therefore need integrity: signed or
   hash-pinned catalogs, help text reviewed like code, third-party tool descriptions treated
-  as untrusted input. The standard's discovery guarantees assume a trusted estate; crossing
+  as untrusted input. The standard's discovery guarantees assume a trusted environment; crossing
   that boundary requires the extra machinery.
 - **Four exit codes is a floor, not a ceiling.** Real systems need to distinguish
   not-found / retryable / partial-side-effect at the layer where agents make retry decisions;
@@ -437,13 +441,18 @@ An honest standard names what it doesn't solve:
 ## 11. Provenance and related work
 
 **Provenance.** Developed and battle-tested operating an autonomous agent fleet across a
-home lab and small production estate (2026): adopted as five constraints in July, restated
-to seven in August after validation against two independent estates' load-bearing tools,
-enforcement clause and escape-telemetry corollary in September — each amendment carrying its
-incident or measurement receipt per its own evidence bar. The founding design session was
-itself an agent–human collaboration in which the agent authored most interface rules from
-first-person ergonomic reasoning ("once I learn one, every future tool is
-zero-learning-cost"; "agent-first flips my own default of pretty-by-default, `--json` for
+home lab and small production environment in 2026. The five-constraint founding version was
+co-designed in a single agent–human working session from a concrete discovery problem; it was
+**not** retrospectively derived from a broad corpus. Later analysis supplied the quantitative
+receipts and corrections: a corpus of **8,743 sessions**, **1.4 million records**, and
+**228,508 tool results** measured the parsing tax cited in §2, including **111,140,940
+characters** read across **10,323** calls. The standard was restated to seven constraints in
+August after validation against two independent operating environments' load-bearing tools;
+the enforcement clause and untyped-fallback telemetry corollary followed in September. Each
+amendment carries its incident or measurement receipt per its own evidence bar. The founding
+design session was itself an agent–human collaboration in which the agent authored most
+interface rules from first-person ergonomic reasoning ("once I learn one, every future tool
+is zero-learning-cost"; "agent-first flips my own default of pretty-by-default, `--json` for
 machines"), and the human supplied the north star: agents are first-class citizens, the
 implementation is left to the agents who will use the tools, and nothing is immutable — but
 rules only change with evidence.
